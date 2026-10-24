@@ -114,6 +114,73 @@ function renderComparison(){
  const textDates=[0,Math.floor((points.length-1)/2),points.length-1].map(i=>`<text x="${x(i)}" y="${H-14}" text-anchor="middle" class="axislabel">${points[i].d}</text>`).join('');
  document.getElementById('comparisonChart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evoluție comparată pe bază 100 a portofoliului și a indicelui ${bench}">${grid}<line x1="${left}" y1="${y(100)}" x2="${W-right}" y2="${y(100)}" stroke="#54667d" stroke-dasharray="5 5"/><path class="line-portfolio" d="${path('p')}"/><path class="line-index" d="${path('b')}"/>${textDates}</svg>`;
 }
+async function loadIndicesData() {
+  try {
+    const response = await fetch('data/indices.json', {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('indices.json indisponibil');
+    }
+
+    const data = await response.json();
+
+    if (
+      !data.indices ||
+      typeof data.indices !== 'object' ||
+      Array.isArray(data.indices)
+    ) {
+      throw new Error('Structura indicilor este invalida');
+    }
+
+    const validIndices = {};
+
+    for (const index of marketIndices) {
+      const quote = data.indices[index.symbol];
+
+      if (!quote) {
+        throw new Error('Indice lipsa: ' + index.symbol);
+      }
+
+      const last = Number(quote.last);
+      const changePct = quote.changePct == null
+        ? null
+        : Number(quote.changePct);
+
+      if (
+        !Number.isFinite(last) ||
+        last <= 0 ||
+        !Number.isFinite(changePct) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(quote.date)
+      ) {
+        throw new Error('Cotatie invalida: ' + index.symbol);
+      }
+
+      validIndices[index.symbol] = {
+        last,
+        changePct,
+        date: quote.date,
+        currency: String(quote.currency || '')
+      };
+    }
+
+    marketFeed = {
+      ...(marketFeed || {}),
+      indices: validIndices
+    };
+
+    document.getElementById('indexFeedStatus').textContent =
+      '12/12 indici · cotatii actualizate';
+
+    renderIndexCards();
+
+  } catch (error) {
+    console.error('Eroare incarcare indici:', error);
+    document.getElementById('indexFeedStatus').textContent =
+      'Cotatii neconectate';
+  }
+}
 async function loadPublicMarketData(){
  try{
   // Export to this path ONLY after licensing/privacy review. No private API requests in browser.
@@ -203,6 +270,9 @@ async function loadPortfolioWeights() {
 renderWeights(null);
 renderIndexCards();
 renderComparison();
-loadPublicMarketData().finally(loadPortfolioWeights);
+loadPublicMarketData().finally(() => {
+  loadPortfolioWeights();
+  loadIndicesData();
+});
 </script></body></html>
 
