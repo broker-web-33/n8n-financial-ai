@@ -141,6 +141,68 @@ function renderWeights(weights){
  const sorted=[...weights].sort((a,b)=>b.weight_pct-a.weight_pct);
  el.innerHTML=sorted.map(w=>{const c=companies.find(x=>x.s===w.symbol);return `<div class="weightrow"><div class="weighttop"><span><strong>${w.symbol}</strong> <span class="muted">${c?.n||''}</span></span><strong>${fmtPct(w.weight_pct).replace('+','')}</strong></div><div class="weighttrack"><i style="width:${w.weight_pct}%"></i></div></div>`}).join('');
 }
-renderWeights(null);renderIndexCards();renderComparison();loadPublicMarketData();
+async function loadPortfolioWeights() {
+  try {
+    const response = await fetch('data/portfolio.json', {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('Fisierul portfolio.json nu este disponibil');
+    }
+
+    const data = await response.json();
+
+    if (
+      data.baseline_date !== '2026-10-26' ||
+      !Array.isArray(data.portfolio) ||
+      data.portfolio.length !== 6
+    ) {
+      throw new Error('Structura portofoliului este invalida');
+    }
+
+    const symbols = new Set();
+    const weights = data.portfolio.map(item => {
+      const symbol = item.symbol;
+      const weight = Number(item.weight_pct);
+
+      if (
+        !companies.some(c => c.s === symbol) ||
+        symbols.has(symbol) ||
+        !Number.isFinite(weight) ||
+        weight < 0 ||
+        weight > 100
+      ) {
+        throw new Error('Pondere invalida: ' + symbol);
+      }
+
+      symbols.add(symbol);
+
+      return {
+        symbol: symbol,
+        weight_pct: weight
+      };
+    });
+
+    const total = weights.reduce(
+      (sum, item) => sum + item.weight_pct, 0
+    );
+
+    if (Math.abs(total - 100) > 0.0001) {
+      throw new Error('Totalul ponderilor nu este 100%');
+    }
+
+    renderWeights(weights);
+
+  } catch (error) {
+    console.error('Eroare incarcare portofoliu:', error);
+    renderWeights(null);
+  }
+}
+
+renderWeights(null);
+renderIndexCards();
+renderComparison();
+loadPublicMarketData().finally(loadPortfolioWeights);
 </script></body></html>
 
