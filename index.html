@@ -267,12 +267,40 @@ async function loadPortfolioWeights() {
   }
 }
 
+async function loadComparisonData() {
+  try {
+    const response = await fetch('data/comparison.json', {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('comparison.json indisponibil');
+    }
+
+    const data = await response.json();
+
+    if (!data || !Array.isArray(data.series)) {
+      throw new Error('Structura comparison.json este invalida');
+    }
+
+    marketFeed = marketFeed || {};
+    marketFeed.comparison = data;
+    renderComparison();
+
+  } catch (error) {
+    console.error('Eroare incarcare comparatie:', error);
+    marketFeed = marketFeed || {};
+    marketFeed.comparison = null;
+    renderComparison();
+  }
+}
 renderWeights(null);
 renderIndexCards();
 renderComparison();
 loadPublicMarketData().finally(() => {
   loadPortfolioWeights();
   loadIndicesData();
+  loadComparisonData();
 });
 </script></body></html>
 
