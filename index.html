@@ -377,6 +377,7 @@ async function loadStocksData() {
     console.error('Eroare incarcare stocks.json:', error);
   }
 }
+
 async function loadComparisonData() {
   try {
     const response = await fetch('data/comparison.json', {
@@ -411,6 +412,7 @@ loadPublicMarketData().finally(() => {
   loadPortfolioWeights();
   loadIndicesData();
   loadComparisonData();
+  loadStocksData();
 });
 </script></body></html>
 
