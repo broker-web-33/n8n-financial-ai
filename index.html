@@ -279,7 +279,7 @@ async function loadComparisonData() {
 
     const data = await response.json();
 
-    if (!data || !Array.isArray(data.series)) {
+    if (!data || !data.series || typeof data.series !== 'object' || Array.isArray(data.series)) {
       throw new Error('Structura comparison.json este invalida');
     }
 
