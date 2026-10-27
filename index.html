@@ -333,7 +333,50 @@ async function loadPortfolioWeights() {
     renderWeights(null);
   }
 }
+async function loadStocksData() {
+  try {
+    const response = await fetch('data/stocks.json', {
+      cache: 'no-store'
+    });
 
+    if (!response.ok) {
+      throw new Error('stocks.json indisponibil');
+    }
+
+    const data = await response.json();
+
+    if (!data || !Array.isArray(data.stocks)) {
+      throw new Error('Structura stocks.json este invalida');
+    }
+
+    const stocks = {};
+
+    for (const stock of data.stocks) {
+      if (typeof stock.symbol !== 'string') continue;
+
+      stocks[stock.symbol] = {
+        currency: stock.currency,
+        last_price: stock.last_price,
+        ma20: stock.ma20,
+        ma50: stock.ma50,
+        ma200: stock.ma200
+      };
+    }
+
+    marketFeed = marketFeed || {};
+    marketFeed.stocks = stocks;
+
+    document.getElementById('overviewTable').innerHTML =
+      table(companies);
+
+    renderTable();
+
+    console.log('Cotatii incarcate:', Object.keys(stocks).length);
+
+  } catch (error) {
+    console.error('Eroare incarcare stocks.json:', error);
+  }
+}
 async function loadComparisonData() {
   try {
     const response = await fetch('data/comparison.json', {
