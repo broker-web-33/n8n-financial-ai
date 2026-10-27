@@ -39,6 +39,7 @@
 <section id="admin" class="only-section"><div class="titleline"><div><div class="eyebrow">ACCESS CONTROL</div><h1>Administrare</h1><p>Gestionarea companiilor, comenzilor și politicilor de publicare.</p></div></div><div class="panel adminlock"><div class="lock">♙</div><h2>Acces administrativ — în pregătire</h2><p>Autentificarea nu este încă implementată. Nu introducem parole în pagina publică și nu permitem modificări din browser până când backend-ul securizat verifică identitatea și permisiunile.</p><div class="readiness"><strong>Funcții planificate</strong><br>＋ Adaugă companie &nbsp; · &nbsp; ⇄ Mută Portofoliu / Watchlist<br>⊘ Dezactivează simbol &nbsp; · &nbsp; ☷ Consultă lista<br>☑ Aprobare și jurnal de audit pentru fiecare comandă</div><p style="margin-top:18px"><button class="btn" disabled>Autentificare — disponibilă ulterior</button></p></div></section>
 </main></div></div>
 <script>
+let marketFeed = null;
 let companies=[{s:'TMV.DE',n:'TeamViewer SE',c:'portfolio',m:'EUR'},{s:'VK.PA',n:'Vallourec SA',c:'portfolio',m:'EUR'},{s:'CVC.AS',n:'CVC Capital Partners plc',c:'portfolio',m:'EUR'},{s:'RHM.DE',n:'Rheinmetall AG',c:'portfolio',m:'EUR'},{s:'LLOY.L',n:'Lloyds Banking Group plc',c:'portfolio',m:'GBp'},{s:'STM.PA',n:'STMicroelectronics',c:'portfolio',m:'EUR'},{s:'SAP.DE',n:'SAP SE',c:'watchlist',m:'EUR'}];
 const labels={overview:'Overview',companies:'Companii urmărite',analytics:'Analiză tehnică',news:'Știri & AI',system:'Server & senzori',admin:'Administrare'};
 function navigate(id){document.querySelectorAll('.only-section').forEach(e=>e.classList.toggle('current',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('active',e.dataset.target===id));document.getElementById('crumb').textContent=labels[id];document.getElementById('sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});location.hash=id}
@@ -109,7 +110,7 @@ const marketIndices=[
  {name:'Nikkei 225',symbol:'^N225',region:'Asia',market:'Japonia'},
  {name:'Hang Seng',symbol:'^HSI',region:'Asia',market:'Hong Kong'}
 ];
-let marketFeed=null;
+
 let selectedRegion='all';
 let selectedPeriod='1M';
 const indexBySymbol=Object.fromEntries(marketIndices.map(i=>[i.symbol,i]));
