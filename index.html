@@ -89,7 +89,7 @@ function displayComparisonEmpty(message){document.getElementById('comparisonStat
 function renderComparison(){
  const comp = marketFeed?.comparison;
  const portfolioSeries = comp?.series?.PORTFOLIO;
- const benchmarkSeries = comp?.series?.[benchmarkSelect.value];
+ const benchmarkSeries = comp?.series?.[benchmarkSelect.value.replace(/^\^/, '')];
 
  if (!Array.isArray(portfolioSeries) || !Array.isArray(benchmarkSeries)) {
    displayComparisonEmpty('Seriile de comparație nu sunt disponibile.');
