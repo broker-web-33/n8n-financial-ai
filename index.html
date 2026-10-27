@@ -87,12 +87,33 @@ benchmarkSelect.onchange=renderComparison;
 document.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{selectedPeriod=b.dataset.period;document.querySelectorAll('[data-period]').forEach(x=>x.classList.toggle('active',x===b));renderComparison()});
 function displayComparisonEmpty(message){document.getElementById('comparisonState').textContent='Serii neconectate';document.getElementById('comparisonNumbers').innerHTML=`<div class="compbox"><span>Portofoliu ponderat</span><strong>—</strong></div><div class="compbox"><span>Indice selectat</span><strong>—</strong></div><div class="compbox"><span>Diferență de performanță</span><strong>—</strong></div>`;document.getElementById('comparisonChart').innerHTML=`<div class="empty"><div class="icon">◫</div><h3>Comparație în pregătire</h3><p>${message}</p></div>`}
 function renderComparison(){
- const comp=marketFeed?.comparison;
- const rawDates=comp?.dates;
- const port=comp?.portfolio_weighted;
- const idx=comp?.indices?.[benchmarkSelect.value];
- if(!Array.isArray(rawDates)||!Array.isArray(port)||!Array.isArray(idx)||rawDates.length!==port.length||rawDates.length!==idx.length){displayComparisonEmpty('Nu există încă serii istorice aprobate pentru coșul de acțiuni și indicele selectat.');return}
- const entries=rawDates.map((d,i)=>({d,p:port[i],b:idx[i]})).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&Number.isFinite(x.p)&&Number.isFinite(x.b)&&x.p>0&&x.b>0).sort((a,b)=>a.d.localeCompare(b.d));
+ const comp = marketFeed?.comparison;
+ const portfolioSeries = comp?.series?.PORTFOLIO;
+ const benchmarkSeries = comp?.series?.[benchmarkSelect.value];
+
+ if (!Array.isArray(portfolioSeries) || !Array.isArray(benchmarkSeries)) {
+   displayComparisonEmpty('Seriile de comparație nu sunt disponibile.');
+   return;
+ }
+
+ const benchmarkByDate = new Map(
+   benchmarkSeries.map(row => [row.date, Number(row.value)])
+ );
+
+ const entries = portfolioSeries
+   .map(row => ({
+     d: row.date,
+     p: Number(row.value),
+     b: benchmarkByDate.get(row.date)
+   }))
+   .filter(x =>
+     /^\d{4}-\d{2}-\d{2}$/.test(x.d) &&
+     Number.isFinite(x.p) &&
+     Number.isFinite(x.b) &&
+     x.p > 0 &&
+     x.b > 0
+   )
+   .sort((a, b) => a.d.localeCompare(b.d));
  if(entries.length<2){displayComparisonEmpty('Sunt necesare minimum două observații valide cu aceeași dată pentru ambele serii.');return}
  const end=entries[entries.length-1].d;
  const cutoff=new Date(end+'T12:00:00Z');
