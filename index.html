@@ -43,7 +43,53 @@ let companies=[{s:'TMV.DE',n:'TeamViewer SE',c:'portfolio',m:'EUR'},{s:'VK.PA',n
 const labels={overview:'Overview',companies:'Companii urmărite',analytics:'Analiză tehnică',news:'Știri & AI',system:'Server & senzori',admin:'Administrare'};
 function navigate(id){document.querySelectorAll('.only-section').forEach(e=>e.classList.toggle('current',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('active',e.dataset.target===id));document.getElementById('crumb').textContent=labels[id];document.getElementById('sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});location.hash=id}
 document.querySelectorAll('.nav button').forEach(e=>e.addEventListener('click',()=>navigate(e.dataset.target)));document.getElementById('menuBtn').onclick=()=>document.getElementById('sidebar').classList.toggle('open');
-function table(data){return `<table><thead><tr><th>Simbol / Companie</th><th>Categorie</th><th>Monedă</th><th>Ultimul preț</th><th>MA20</th><th>MA50</th><th>MA200</th></tr></thead><tbody>${data.map(x=>`<tr><td><span class="ticker">${x.s}</span><span class="company">${x.n}</span></td><td><span class="tag ${x.c==='watchlist'?'watch':''}">${x.c==='portfolio'?'Portofoliu':'Watchlist'}</span></td><td>${x.m}</td><td class="placeholder">—</td><td class="placeholder">—</td><td class="placeholder">—</td><td class="placeholder">—</td></tr>`).join('')}</tbody></table>`}
+function table(data) {
+  const stocks = marketFeed?.stocks || {};
+
+  const formatPrice = (value) =>
+    value == null || !Number.isFinite(Number(value))
+      ? '—'
+      : Number(value).toLocaleString('ro-RO', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 4
+        });
+
+  return `<table>
+    <thead>
+      <tr>
+        <th>Simbol / Companie</th>
+        <th>Categorie</th>
+        <th>Monedă</th>
+        <th>Ultimul preț</th>
+        <th>MA20</th>
+        <th>MA50</th>
+        <th>MA200</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map(x => {
+        const q = stocks[x.s];
+
+        return `<tr>
+          <td>
+            <span class="ticker">${x.s}</span>
+            <span class="company">${x.n}</span>
+          </td>
+          <td>
+            <span class="tag ${x.c === 'watchlist' ? 'watch' : ''}">
+              ${x.c === 'portfolio' ? 'Portofoliu' : 'Watchlist'}
+            </span>
+          </td>
+          <td>${q?.currency || x.m}</td>
+          <td>${formatPrice(q?.last_price)}</td>
+          <td>${formatPrice(q?.ma20)}</td>
+          <td>${formatPrice(q?.ma50)}</td>
+          <td>${formatPrice(q?.ma200)}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
 document.getElementById('overviewTable').innerHTML=table(companies);let currentFilter='all';function renderTable(){let s=document.getElementById('search').value.toLowerCase().trim();let a=companies.filter(x=>(currentFilter==='all'||x.c===currentFilter)&&(x.s.toLowerCase().includes(s)||x.n.toLowerCase().includes(s)));document.getElementById('companyTable').innerHTML=table(a)}document.getElementById('search').addEventListener('input',renderTable);document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{currentFilter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTable()});renderTable();
 const sensors=[['CPU','Utilizare procesor','%'],['RAM','Memorie utilizată','%'],['Temperatură CPU','Senzori termici','°C'],['Stocare','Spațiu utilizat','%'],['Disk I/O','Activitate disc','MB/s'],['Uptime','Timp de funcționare','zile']];document.getElementById('sensors').innerHTML=sensors.map(a=>`<div class="metric"><div class="label">${a[0]}</div><div class="value">— <span style="font-size:15px;color:var(--muted)">${a[2]}</span></div><div class="gauge"></div><div class="sub">${a[1]} · Nu există date live</div></div>`).join('');if(labels[decodeURIComponent(location.hash.slice(1))])navigate(location.hash.slice(1));
 
