@@ -336,6 +336,51 @@ async function loadPortfolioWeights() {
     renderWeights(null);
   }
 }
+function renderTechnicalIndicators() {
+  const container = document.getElementById('technicalIndicators');
+  if (!container) return;
+
+  const stocks = marketFeed?.stocks || {};
+
+  const formatValue = value =>
+    value == null || !Number.isFinite(Number(value))
+      ? '—'
+      : Number(value).toLocaleString('ro-RO', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 4
+        });
+
+  const rows = companies.map(company => {
+    const stock = stocks[company.s] || {};
+
+    return `
+      <tr>
+        <td><strong>${company.s}</strong></td>
+        <td>${formatValue(stock.last_price)}</td>
+        <td>${formatValue(stock.ma20)}</td>
+        <td>${formatValue(stock.ma50)}</td>
+        <td>${formatValue(stock.ma200)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Simbol</th>
+            <th>Ultimul preț</th>
+            <th>MA20</th>
+            <th>MA50</th>
+            <th>MA200</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}  
 async function loadStocksData() {
   try {
     const response = await fetch('data/stocks.json', {
