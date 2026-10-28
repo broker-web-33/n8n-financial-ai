@@ -138,7 +138,23 @@ function displayComparisonEmpty(message){document.getElementById('comparisonStat
 function renderComparison(){
  const comp = marketFeed?.comparison;
  const portfolioSeries = comp?.series?.PORTFOLIO;
- const benchmarkSeries = comp?.series?.[benchmarkSelect.value.replace(/^\^/, '')];
+ const benchmarkSymbols = {
+  '^STOXX50E': 'STOXX50E',
+  '^GDAXI': 'DAX',
+  '^FCHI': 'CAC40',
+  '^FTSE': 'FTSE100',
+  '^IBEX': 'IBEX35',
+  'FTSEMIB.MI': 'FTSEMIB',
+  '^GSPC': 'SP500',
+  '^IXIC': 'NASDAQ',
+  '^DJI': 'DOW',
+  '^RUT': 'RUSSELL2000',
+  '^N225': 'NIKKEI225',
+  '^HSI': 'HANGSENG'
+};
+
+const benchmarkKey = benchmarkSymbols[benchmarkSelect.value];
+const benchmarkSeries = benchmarkKey ? comp?.series?.[benchmarkKey] : undefined;
 
  if (!Array.isArray(portfolioSeries) || !Array.isArray(benchmarkSeries)) {
    displayComparisonEmpty('Seriile de comparație nu sunt disponibile.');
